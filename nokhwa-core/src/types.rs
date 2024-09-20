@@ -1802,36 +1802,28 @@ pub fn buf_nv12_to_rgb(
     // let height_usize = resolution.height() as usize;
 
     for (hidx, horizontal_row) in data[0..y_section].chunks_exact(width_usize).enumerate() {
+        let uv_row_base = y_section + (hidx / 2) * width_usize;
+    
         for (cidx, column) in horizontal_row.chunks_exact(2).enumerate() {
-            let u = data[(y_section) + ((hidx / 2) * width_usize) + (cidx * 2)];
-            let v = data[(y_section) + ((hidx / 2) * width_usize) + (cidx * 2) + 1];
-
+            let u = data[uv_row_base + cidx * 2];
+            let v = data[uv_row_base + cidx * 2 + 1];
+    
             let y0 = column[0];
             let y1 = column[1];
             let base_index = (hidx * width_usize * rgba_size) + cidx * rgba_size * 2;
-
+    
             if rgba {
                 let px0 = yuyv444_to_rgba(y0 as i32, u as i32, v as i32);
                 let px1 = yuyv444_to_rgba(y1 as i32, u as i32, v as i32);
-
-                out[base_index] = px0[0];
-                out[base_index + 1] = px0[1];
-                out[base_index + 2] = px0[2];
-                out[base_index + 3] = px0[3];
-                out[base_index + 4] = px1[0];
-                out[base_index + 5] = px1[1];
-                out[base_index + 6] = px1[2];
-                out[base_index + 7] = px1[3];
+    
+                out[base_index..base_index + 4].copy_from_slice(&px0);
+                out[base_index + 4..base_index + 8].copy_from_slice(&px1);
             } else {
                 let px0 = yuyv444_to_rgb(y0 as i32, u as i32, v as i32);
                 let px1 = yuyv444_to_rgb(y1 as i32, u as i32, v as i32);
-
-                out[base_index] = px0[0];
-                out[base_index + 1] = px0[1];
-                out[base_index + 2] = px0[2];
-                out[base_index + 3] = px1[0];
-                out[base_index + 4] = px1[1];
-                out[base_index + 5] = px1[2];
+    
+                out[base_index..base_index + 3].copy_from_slice(&px0);
+                out[base_index + 3..base_index + 6].copy_from_slice(&px1);
             }
         }
     }
